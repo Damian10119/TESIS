@@ -99,6 +99,18 @@ public class SecurityConfig {
                         .requestMatchers("/api/reportes/**")
                             .hasAnyRole("ADMINISTRADOR", "VENDEDOR")
 
+                        // Comprobantes: administrador y vendedor pueden consultar
+                        .requestMatchers("/api/comprobantes/**")
+                            .hasAnyRole("ADMINISTRADOR", "VENDEDOR")
+
+                        // Facturación electrónica: ambos pueden consultar y generar; estados solo administrador
+                        .requestMatchers(HttpMethod.GET, "/api/facturas-electronicas/**")
+                            .hasAnyRole("ADMINISTRADOR", "VENDEDOR")
+                        .requestMatchers(HttpMethod.POST, "/api/facturas-electronicas/generar/**")
+                            .hasAnyRole("ADMINISTRADOR", "VENDEDOR")
+                        .requestMatchers("/api/facturas-electronicas/**")
+                            .hasRole("ADMINISTRADOR")
+
                         // Cualquier otra ruta futura requiere login
                         .anyRequest().authenticated()
                         )
