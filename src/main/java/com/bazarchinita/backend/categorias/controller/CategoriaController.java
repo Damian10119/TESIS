@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import com.bazarchinita.backend.categorias.dto.CategoriaRequest;
 import com.bazarchinita.backend.categorias.dto.CategoriaResponse;
 import com.bazarchinita.backend.categorias.service.CategoriaService;
+import com.bazarchinita.backend.common.response.ApiResponse;
 
 import jakarta.validation.Valid;
 
@@ -53,5 +54,15 @@ public class CategoriaController {
     @PatchMapping("/{id}/desactivar")
     public CategoriaResponse desactivar(@PathVariable Integer id) {
         return categoriaService.desactivar(id);
+    }
+
+    @PatchMapping("/{idCategoria}/activar")
+    public ApiResponse<CategoriaResponse> activar(
+            @PathVariable Integer idCategoria
+    ) {
+        return ApiResponse.success(
+                "Categoría activada correctamente",
+                categoriaService.activar(idCategoria)
+        );
     }
 }

@@ -1,7 +1,9 @@
 package com.bazarchinita.backend.facturacionelectronica.controller;
 
 import java.util.List;
+import java.time.LocalDate;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import com.bazarchinita.backend.common.response.ApiResponse;
@@ -58,6 +60,45 @@ public class FacturaElectronicaController {
                 facturaElectronicaService.buscarPorComprobante(idComprobante)
         );
     }
+
+    @GetMapping("/buscar")
+        public ApiResponse<List<FacturaElectronicaResponse>> buscarFacturas(
+                @RequestParam(required = false)
+                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                LocalDate fechaInicio,
+
+                @RequestParam(required = false)
+                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                LocalDate fechaFin,
+
+                @RequestParam(required = false)
+                String estadoSri,
+
+                @RequestParam(required = false)
+                String identificacionCliente,
+
+                @RequestParam(required = false)
+                String numeroComprobante,
+
+                @RequestParam(required = false)
+                String claveAcceso,
+
+                @RequestParam(required = false)
+                String numeroAutorizacion
+        ) {
+        return ApiResponse.success(
+                "Facturas electrónicas filtradas correctamente",
+                facturaElectronicaService.buscarFacturas(
+                        fechaInicio,
+                        fechaFin,
+                        estadoSri,
+                        identificacionCliente,
+                        numeroComprobante,
+                        claveAcceso,
+                        numeroAutorizacion
+                )
+        );
+        }
 
     @PostMapping("/generar/venta/{idVenta}")
     public ApiResponse<FacturaElectronicaResponse> generarDesdeVenta(

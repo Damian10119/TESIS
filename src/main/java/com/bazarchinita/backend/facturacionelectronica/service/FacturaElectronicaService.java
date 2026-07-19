@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
+import java.util.ArrayList;
 
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
@@ -71,6 +73,66 @@ public class FacturaElectronicaService {
         } catch (EmptyResultDataAccessException ex) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe factura electrónica para el comprobante indicado");
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<FacturaElectronicaResponse> buscarFacturas(
+            LocalDate fechaInicio,
+            LocalDate fechaFin,
+            String estadoSri,
+            String identificacionCliente,
+            String numeroComprobante,
+            String claveAcceso,
+            String numeroAutorizacion
+    ) {
+        validarRangoFechas(fechaInicio, fechaFin);
+        StringBuilder sql = new StringBuilder(consultaBase());
+        sql.append(" WHERE 1 = 1 ");
+
+        List<Object> parametros = new ArrayList<>();
+
+        if (fechaInicio != null) {
+            sql.append(" AND DATE(co.fecha_emision) >= ? ");
+            parametros.add(fechaInicio);
+        }
+
+        if (fechaFin != null) {
+            sql.append(" AND DATE(co.fecha_emision) <= ? ");
+            parametros.add(fechaFin);
+        }
+
+        if (estadoSri != null && !estadoSri.trim().isEmpty()) {
+            sql.append(" AND UPPER(fe.estado_sri) = UPPER(?) ");
+            parametros.add(estadoSri.trim());
+        }
+
+        if (identificacionCliente != null && !identificacionCliente.trim().isEmpty()) {
+            sql.append(" AND c.identificacion ILIKE ? ");
+            parametros.add("%" + identificacionCliente.trim() + "%");
+        }
+
+        if (numeroComprobante != null && !numeroComprobante.trim().isEmpty()) {
+            sql.append(" AND co.numero_comprobante ILIKE ? ");
+            parametros.add("%" + numeroComprobante.trim() + "%");
+        }
+
+        if (claveAcceso != null && !claveAcceso.trim().isEmpty()) {
+            sql.append(" AND fe.clave_acceso ILIKE ? ");
+            parametros.add("%" + claveAcceso.trim() + "%");
+        }
+
+        if (numeroAutorizacion != null && !numeroAutorizacion.trim().isEmpty()) {
+            sql.append(" AND fe.numero_autorizacion ILIKE ? ");
+            parametros.add("%" + numeroAutorizacion.trim() + "%");
+        }
+
+        sql.append(" ORDER BY co.fecha_emision DESC ");
+
+        return jdbcTemplate.query(
+                sql.toString(),
+                (rs, rowNum) -> mapearFactura(rs),
+                parametros.toArray()
+        );
     }
 
     @Transactional
@@ -245,6 +307,15 @@ public class FacturaElectronicaService {
 
         if (filas == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Factura electrónica no encontrada");
+        }
+    }
+
+    private void validarRangoFechas(LocalDate fechaInicio, LocalDate fechaFin) {
+        if (fechaInicio != null && fechaFin != null && fechaInicio.isAfter(fechaFin)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La fecha de inicio no puede ser mayor que la fecha fin"
+            );
         }
     }
 

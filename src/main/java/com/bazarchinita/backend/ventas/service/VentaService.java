@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -190,6 +191,95 @@ public class VentaService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public List<VentaConsultaResponse> buscarVentas(
+            LocalDate fechaInicio,
+            LocalDate fechaFin,
+            String estadoVenta,
+            String tipoComprobante,
+            String identificacionCliente,
+            String numeroComprobante
+    ) {
+        validarRangoFechas(fechaInicio,fechaFin);
+
+        StringBuilder sql = new StringBuilder("""
+                SELECT
+                    id_venta,
+                    fecha_venta,
+                    cliente,
+                    identificacion_cliente,
+                    es_consumidor_final,
+                    usuario_registra,
+                    subtotal,
+                    descuento_total,
+                    iva_total,
+                    total,
+                    total_pagado,
+                    estado_venta,
+                    tipo_comprobante,
+                    numero_comprobante,
+                    estado_comprobante
+                FROM vista_ventas_completas
+                WHERE 1 = 1
+                """);
+
+        List<Object> parametros = new ArrayList<>();
+
+        if (fechaInicio != null) {
+            sql.append(" AND DATE(fecha_venta) >= ? ");
+            parametros.add(fechaInicio);
+        }
+
+        if (fechaFin != null) {
+            sql.append(" AND DATE(fecha_venta) <= ? ");
+            parametros.add(fechaFin);
+        }
+
+        if (estadoVenta != null && !estadoVenta.trim().isEmpty()) {
+            sql.append(" AND UPPER(estado_venta) = UPPER(?) ");
+            parametros.add(estadoVenta.trim());
+        }
+
+        if (tipoComprobante != null && !tipoComprobante.trim().isEmpty()) {
+            sql.append(" AND UPPER(tipo_comprobante) = UPPER(?) ");
+            parametros.add(tipoComprobante.trim());
+        }
+
+        if (identificacionCliente != null && !identificacionCliente.trim().isEmpty()) {
+            sql.append(" AND identificacion_cliente ILIKE ? ");
+            parametros.add("%" + identificacionCliente.trim() + "%");
+        }
+
+        if (numeroComprobante != null && !numeroComprobante.trim().isEmpty()) {
+            sql.append(" AND numero_comprobante ILIKE ? ");
+            parametros.add("%" + numeroComprobante.trim() + "%");
+        }
+
+        sql.append(" ORDER BY fecha_venta DESC ");
+
+        return jdbcTemplate.query(
+                sql.toString(),
+                (rs, rowNum) -> new VentaConsultaResponse(
+                        rs.getInt("id_venta"),
+                        rs.getTimestamp("fecha_venta").toLocalDateTime(),
+                        rs.getString("cliente"),
+                        rs.getString("identificacion_cliente"),
+                        rs.getBoolean("es_consumidor_final"),
+                        rs.getString("usuario_registra"),
+                        rs.getBigDecimal("subtotal"),
+                        rs.getBigDecimal("descuento_total"),
+                        rs.getBigDecimal("iva_total"),
+                        rs.getBigDecimal("total"),
+                        rs.getBigDecimal("total_pagado"),
+                        rs.getString("estado_venta"),
+                        rs.getString("tipo_comprobante"),
+                        rs.getString("numero_comprobante"),
+                        rs.getString("estado_comprobante")
+                ),
+                parametros.toArray()
+        );
+    }
+
     private Usuario obtenerUsuarioActual() {
         String nombreUsuario = SecurityContextHolder
                 .getContext()
@@ -267,5 +357,14 @@ public class VentaService {
         }
 
         return texto.trim();
+    }
+
+    private void validarRangoFechas(LocalDate fechaInicio, LocalDate fechaFin) {
+        if (fechaInicio != null && fechaFin != null && fechaInicio.isAfter(fechaFin)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La fecha de inicio no puede ser mayor que la fecha fin"
+            );
+        }
     }
 }

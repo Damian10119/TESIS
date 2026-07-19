@@ -1,7 +1,9 @@
 package com.bazarchinita.backend.ventas.controller;
 
 import java.util.List;
+import java.time.LocalDate;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import com.bazarchinita.backend.common.response.ApiResponse;
@@ -48,6 +50,41 @@ public class VentaController {
         return ApiResponse.success(
                 "Detalle de venta consultado correctamente",
                 ventaService.obtenerDetalleVenta(id)
+        );
+    }
+
+    @GetMapping("/buscar")
+    public ApiResponse<List<VentaConsultaResponse>> buscarVentas(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate fechaInicio,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate fechaFin,
+
+            @RequestParam(required = false)
+            String estadoVenta,
+
+            @RequestParam(required = false)
+            String tipoComprobante,
+
+            @RequestParam(required = false)
+            String identificacionCliente,
+
+            @RequestParam(required = false)
+            String numeroComprobante
+    ) {
+        return ApiResponse.success(
+                "Ventas filtradas correctamente",
+                ventaService.buscarVentas(
+                        fechaInicio,
+                        fechaFin,
+                        estadoVenta,
+                        tipoComprobante,
+                        identificacionCliente,
+                        numeroComprobante
+                )
         );
     }
 

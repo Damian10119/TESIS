@@ -52,14 +52,20 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
 
-                        // Rutas públicas
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // Login públicas
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+
+                        // Sistema Publico
                         .requestMatchers("/api/system/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
 
                         // Usuarios y roles: solo administrador
                         .requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/roles/**").hasRole("ADMINISTRADOR")
+
+                        // Usuario Autenticado
+                        .requestMatchers("/api/auth/perfil", "/api/auth/cambiar-contrasena")
+                            .authenticated()
 
                         // Configuración del negocio
                         .requestMatchers(HttpMethod.GET, "/api/configuracion-negocio/**")
@@ -109,6 +115,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/facturas-electronicas/generar/**")
                             .hasAnyRole("ADMINISTRADOR", "VENDEDOR")
                         .requestMatchers("/api/facturas-electronicas/**")
+                            .hasRole("ADMINISTRADOR")
+
+                        // Inventario manual: solo administrador
+                        .requestMatchers("/api/inventario/**")
                             .hasRole("ADMINISTRADOR")
 
                         // Cualquier otra ruta futura requiere login

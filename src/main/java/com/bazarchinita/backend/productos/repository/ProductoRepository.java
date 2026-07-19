@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.bazarchinita.backend.productos.entity.Producto;
 
@@ -26,4 +27,14 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer> {
             ORDER BY p.nombreProducto ASC
             """)
     List<Producto> findProductosConStockBajo();
+
+    @Query("""
+            SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END
+            FROM Producto p
+            WHERE p.categoria.idCategoria = :idCategoria
+              AND p.estado = true
+            """)
+    boolean existeProductoActivoPorCategoria(
+            @Param("idCategoria") Integer idCategoria
+  );
 }
