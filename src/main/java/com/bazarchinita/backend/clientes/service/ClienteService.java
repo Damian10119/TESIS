@@ -168,25 +168,62 @@ public class ClienteService {
     }
 
     @Transactional
-    public ClienteResponse desactivar(Integer id) {
-        Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Cliente no encontrado"
-                ));
+    public ClienteResponse desactivar(Integer idCliente) {
+        Cliente cliente = buscarClientePorId(idCliente);
 
         if (Boolean.TRUE.equals(cliente.getEsConsumidorFinal())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "No se puede desactivar el Consumidor Final"
+                    "No se puede desactivar el consumidor final"
+            );
+        }
+
+        if (Boolean.FALSE.equals(cliente.getEstado())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El cliente ya se encuentra inactivo"
             );
         }
 
         cliente.setEstado(false);
 
-        Cliente clienteDesactivado = clienteRepository.saveAndFlush(cliente);
+        Cliente clienteActualizado = clienteRepository.save(cliente);
 
-        return convertirAResponse(clienteDesactivado);
+        return convertirAResponse(clienteActualizado);
+    }
+
+    @Transactional
+    public ClienteResponse activar(Integer idCliente) {
+        Cliente cliente = buscarClientePorId(idCliente);
+
+        if (Boolean.TRUE.equals(cliente.getEsConsumidorFinal())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El consumidor final debe permanecer activo"
+            );
+        }
+
+        if (Boolean.TRUE.equals(cliente.getEstado())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El cliente ya se encuentra activo"
+            );
+        }
+
+        cliente.setEstado(true);
+
+        Cliente clienteActualizado = clienteRepository.save(cliente);
+
+        return convertirAResponse(clienteActualizado);
+    }
+
+
+    private Cliente buscarClientePorId(Integer idCliente) {
+        return clienteRepository.findById(idCliente)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Cliente no encontrado"
+                ));
     }
 
     private ClienteResponse convertirAResponse(Cliente cliente) {

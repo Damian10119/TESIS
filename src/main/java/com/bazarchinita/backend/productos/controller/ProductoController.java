@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import com.bazarchinita.backend.common.response.ApiResponse;
 import com.bazarchinita.backend.productos.dto.ProductoRequest;
 import com.bazarchinita.backend.productos.dto.ProductoResponse;
 import com.bazarchinita.backend.productos.service.ProductoService;
@@ -69,4 +70,15 @@ public class ProductoController {
     public ProductoResponse desactivar(@PathVariable Integer id) {
         return productoService.desactivar(id);
     }
+    
+    @PatchMapping("/{idProducto}/activar")
+    public ApiResponse<ProductoResponse> activar(
+            @PathVariable Integer idProducto
+    ) {
+        return ApiResponse.success(
+                "Producto activado correctamente",
+                productoService.activar(idProducto)
+        );
+    }
+
 }

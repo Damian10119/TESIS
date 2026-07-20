@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+
 import com.bazarchinita.backend.categorias.entity.Categoria;
 import com.bazarchinita.backend.categorias.repository.CategoriaRepository;
 import com.bazarchinita.backend.productos.dto.ProductoRequest;
@@ -207,19 +208,56 @@ public class ProductoService {
     }
 
     @Transactional
-    public ProductoResponse desactivar(Integer id) {
-        Producto producto = productoRepository.findById(id)
+        public ProductoResponse desactivar(Integer idProducto) {
+        Producto producto = buscarProductoPorId(idProducto);
+
+        if (Boolean.FALSE.equals(producto.getEstado())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "El producto ya se encuentra inactivo"
+                );
+        }
+
+        producto.setEstado(false);
+
+        Producto productoActualizado = productoRepository.save(producto);
+
+        return convertirAResponse(productoActualizado);
+        }
+
+        @Transactional
+        public ProductoResponse activar(Integer idProducto) {
+        Producto producto = buscarProductoPorId(idProducto);
+
+        if (Boolean.TRUE.equals(producto.getEstado())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "El producto ya se encuentra activo"
+                );
+        }
+
+        if (producto.getCategoria() == null || Boolean.FALSE.equals(producto.getCategoria().getEstado())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "No se puede activar el producto porque su categoría se encuentra inactiva"
+                );
+        }
+
+        producto.setEstado(true);
+
+        Producto productoActualizado = productoRepository.save(producto);
+
+        return convertirAResponse(productoActualizado);
+        }
+
+        private Producto buscarProductoPorId(Integer idProducto) {
+        return productoRepository.findById(idProducto)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Producto no encontrado"
                 ));
-
-        producto.setEstado(false);
-
-        Producto productoDesactivado = productoRepository.save(producto);
-
-        return convertirAResponse(productoDesactivado);
-    }
+        }
+        
 
     private ProductoResponse convertirAResponse(Producto producto) {
         return new ProductoResponse(

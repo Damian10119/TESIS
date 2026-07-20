@@ -106,14 +106,54 @@ public class UsuarioService {
     }
 
     @Transactional
-    public UsuarioResponse desactivar(Integer id) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+    public UsuarioResponse desactivar(Integer idUsuario) {
+        Usuario usuario = buscarUsuarioPorId(idUsuario);
+
+        if (Boolean.FALSE.equals(usuario.getEstado())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El usuario ya se encuentra inactivo"
+            );
+        }
 
         usuario.setEstado(false);
 
-        Usuario usuarioDesactivado = usuarioRepository.saveAndFlush(usuario);
-        return convertirAResponse(usuarioDesactivado);
+        Usuario usuarioActualizado = usuarioRepository.save(usuario);
+
+        return convertirAResponse(usuarioActualizado);
+    }
+
+    @Transactional
+    public UsuarioResponse activar(Integer idUsuario) {
+        Usuario usuario = buscarUsuarioPorId(idUsuario);
+
+        if (Boolean.TRUE.equals(usuario.getEstado())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El usuario ya se encuentra activo"
+            );
+        }
+
+        if (usuario.getRol() == null || Boolean.FALSE.equals(usuario.getRol().getEstado())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "No se puede activar el usuario porque su rol se encuentra inactivo"
+            );
+        }
+
+        usuario.setEstado(true);
+
+        Usuario usuarioActualizado = usuarioRepository.save(usuario);
+
+        return convertirAResponse(usuarioActualizado);
+    }
+
+    private Usuario buscarUsuarioPorId(Integer idUsuario) {
+        return usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Usuario no encontrado"
+                ));
     }
 
     private UsuarioResponse convertirAResponse(Usuario usuario) {

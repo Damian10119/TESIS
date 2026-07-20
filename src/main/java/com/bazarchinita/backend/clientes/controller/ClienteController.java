@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import com.bazarchinita.backend.clientes.dto.ClienteRequest;
 import com.bazarchinita.backend.clientes.dto.ClienteResponse;
 import com.bazarchinita.backend.clientes.service.ClienteService;
+import com.bazarchinita.backend.common.response.ApiResponse;
 
 import jakarta.validation.Valid;
 
@@ -68,5 +69,15 @@ public class ClienteController {
     @PatchMapping("/{id}/desactivar")
     public ClienteResponse desactivar(@PathVariable Integer id) {
         return clienteService.desactivar(id);
+    }
+
+    @PatchMapping("/{idCliente}/activar")
+    public ApiResponse<ClienteResponse> activar(
+            @PathVariable Integer idCliente
+    ) {
+        return ApiResponse.success(
+                "Cliente activado correctamente",
+                clienteService.activar(idCliente)
+        );
     }
 }

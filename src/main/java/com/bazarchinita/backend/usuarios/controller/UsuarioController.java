@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import com.bazarchinita.backend.common.response.ApiResponse;
 import com.bazarchinita.backend.usuarios.dto.UsuarioRequest;
 import com.bazarchinita.backend.usuarios.dto.UsuarioResponse;
 import com.bazarchinita.backend.usuarios.dto.UsuarioUpdateRequest;
@@ -54,5 +55,15 @@ public class UsuarioController {
     @PatchMapping("/{id}/desactivar")
     public UsuarioResponse desactivar(@PathVariable Integer id) {
         return usuarioService.desactivar(id);
+    }
+
+    @PatchMapping("/{idUsuario}/activar")
+    public ApiResponse<UsuarioResponse> activar(
+            @PathVariable Integer idUsuario
+    ) {
+        return ApiResponse.success(
+                "Usuario activado correctamente",
+                usuarioService.activar(idUsuario)
+        );
     }
 }
